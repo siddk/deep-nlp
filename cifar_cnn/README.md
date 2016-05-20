@@ -15,14 +15,23 @@ deer, dog, frog, horse, ship, and truck.
               
 + **Layer**: This model follows the AlexNet CNN convention. See AlexNet paper for detailed 
              descriptions of layers. The layers are broken up as follows:
+  
   1) **Conv1**: Convolution Layer with ReLU Activation.
+  
   2) **Pool1**: Max Pooling Layer.
+  
   3) **Norm1**: Localized Response Normalization Layer.
+  
   4) **Conv2**: Convolution Layer with ReLU Activation.
+  
   5) **Norm2**: Localized Response Normalization Layer.
+  
   6) **Pool2**: Max Pooling Layer.
+  
   7) **Local1**: Fully Connected Feed-Forward Layer with ReLU Activation.
+  
   8) **Local2**: Another Fully Connected Feed-Forward Layer with ReLU Activation.
+  
   9) **Softmax Linear Transformation**: Simple Linear Transformation with Bias, then a Softmax. Or,
               in other words, if the output of the previous layer is "x", then this layer returns
               Softmax(Wx + b), where "W" and "b" are weight matrices.
