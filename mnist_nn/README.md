@@ -2,6 +2,10 @@
 Simple MNIST Handwriting Classification Problem. Given a 28 x 28 pixel image, pick which digit class
 it belongs to.
 
+Note: This is a very simple model, and it is meant as an introduction to Tensorflow. Real Models
+are formatted differently, in an inference/loss/training pattern. For an example of this, see the
+cifar_cnn/ directory.
+
 ## Model Setup ##
     
 + **Input**: 28 x 28 Pixel Image, flattened into a single vector of size 784. The input "x" is then
