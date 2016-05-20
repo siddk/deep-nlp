@@ -64,6 +64,15 @@ class CIFAR:
             # Build the Backpropagation Graph (i.e. compute Gradients from loss, etc.)
             self.train_op = self.train()
 
+        # Evaluation pipeline
+        if not train:
+            # Build a Graph that computes the logits predictions (running an image through model)
+            self.logits = self.inference()
+
+            # Calculate predictions.
+            self.top_k_op = tf.nn.in_top_k(self.logits, self.labels, 1)
+
+
     def inference(self):
         """
         Build the CIFAR-10 Model.
@@ -273,6 +282,22 @@ class CIFAR:
             weight_decay = tf.mul(tf.nn.l2_loss(var), wd, name='weight_loss')
             tf.add_to_collection('losses', weight_decay)
         return var
+
+    @staticmethod
+    def inputs(eval_data):
+        """
+        Construct regular input for CIFAR evaluation.
+
+        :param eval_data: bool, indicating if one should use the train or eval data set.
+        :return: Tuple of images, labels where:
+            images: 4D tensor of shape (batch_size, IMAGE_SIZE, IMAGE_SIZE, 3) -> Normal RGB Image
+            labels: 1D tensor of shape (batch_size) -> Each label is the number of class from 0 - 9
+        """
+        if not FLAGS.data_dir:
+            raise ValueError('Please supply a data_dir')
+        data_dir = os.path.join(FLAGS.data_dir, 'cifar-10-batches-bin')
+        return cifar10_input.inputs(eval_data=eval_data, data_dir=data_dir,
+                                    batch_size=FLAGS.batch_size)
 
     @staticmethod
     def distorted_inputs():

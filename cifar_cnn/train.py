@@ -1,7 +1,7 @@
 """
 train.py
 
-Core runner for training Deep CIFAR-10 model. Builds a small-ish Convolutional
+Core runner for training the Deep CIFAR-10 model. Builds a small-ish Convolutional
 Neural Network for classifying images into one of 10 different categories: airplanes, automobiles,
 birds, cats, deer, dogs, frogs, horses, ships, and trucks.
 
