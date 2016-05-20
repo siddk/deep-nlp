@@ -7,22 +7,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from six.moves import urllib
-from tensorflow.models.image.cifar10 import cifar10_input  # Get data from Tensorflow Directory
-
 import os
 import re
 import sys
 import tarfile
+
+from six.moves import urllib
+from preprocessor import cifar10_input
 import tensorflow as tf
 
-# Data URL
-DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
-
-# Setup Tensorflow Model Parameters, or "FLAGS"
+# Get current parameters
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('batch_size', 128, "Number of images to process in a batch.")
-tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data', "Path to the CIFAR-10 data directory.")
 
 # Global constants describing the CIFAR-10 data set.
 IMAGE_SIZE = cifar10_input.IMAGE_SIZE
@@ -41,24 +36,45 @@ INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
 # names of the summaries when visualizing a model.
 TOWER_NAME = 'tower'
 
+# Data URL
+DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
+
 
 class CIFAR:
-    def __init__(self):
-        pass
+    def __init__(self, images, labels, global_step, train=True):
+        """
+        Instantiate a CIFAR Model, and build the computation pipelines for
 
-    @staticmethod
-    def inference(images):
+        :param images: Tensor of preprocessed images.
+        :param labels: Labels for aforementioned images.
+        :param global_step: Step size.
+        :param train: Boolean if training or evaluation model.
+        """
+        self.images, self.labels = images, labels
+        self.global_step = global_step
+
+        # Training pipeline
+        if train:
+            # Build a Graph that computes the logits predictions (running an image through model)
+            self.logits = self.inference()
+
+            # Build a Graph that computes the loss value from the logits, and the true labels
+            self.loss_value = self.loss()
+
+            # Build the Backpropagation Graph (i.e. compute Gradients from loss, etc.)
+            self.train_op = self.train()
+
+    def inference(self):
         """
         Build the CIFAR-10 Model.
 
-        :param images: Preprocessed input image data.
-        :return: Tensor of logits.
+        :return: Tensor of unnormalized logits.
         """
         # Conv1 Layer
         with tf.variable_scope('conv1') as scope:
             kernel = CIFAR._variable_with_weight_decay('weights', shape=[5, 5, 3, 64],
                                                        stddev=1e-4, wd=0.0)
-            conv = tf.nn.conv2d(images, kernel, [1, 1, 1, 1], padding='SAME')
+            conv = tf.nn.conv2d(self.images, kernel, [1, 1, 1, 1], padding='SAME')
             biases = CIFAR._variable_on_cpu('biases', [64], tf.constant_initializer(0.0))
             bias = tf.nn.bias_add(conv, biases)
             conv1 = tf.nn.relu(bias, name=scope.name)
@@ -110,27 +126,23 @@ class CIFAR:
         with tf.variable_scope('softmax_linear') as scope:
             weights = CIFAR._variable_with_weight_decay('weights', [192, NUM_CLASSES],
                                                         stddev=1 / 192.0, wd=0.0)
-            biases = CIFAR._variable_on_cpu('biases', [NUM_CLASSES],
-                              tf.constant_initializer(0.0))
+            biases = CIFAR._variable_on_cpu('biases', [NUM_CLASSES], tf.constant_initializer(0.0))
             softmax_linear = tf.add(tf.matmul(local4, weights), biases, name=scope.name)
             CIFAR._activation_summary(softmax_linear)
 
         return softmax_linear
 
-    @staticmethod
-    def loss(logits, labels):
+    def loss(self):
         """
         Compute the Loss Tensor, which is comprised of the logits cross-entropy loss with the
         true labels, plus all of the L2 Loss terms from each of the weights (for regularization).
         Also add summary for "Loss" and "Loss/avg"
 
-        :param logits: Unnormalized Logits as a result of passing image input through network.
-        :param labels: True labels
         :return: Loss tensor of type float.
         """
         # Calculate the average cross entropy loss across the batch.
-        labels = tf.cast(labels, tf.int64)
-        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits, labels,
+        labels = tf.cast(self.labels, tf.int64)
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(self.logits, labels,
                                                                 name='cross_entropy_per_example')
         cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
         tf.add_to_collection('losses', cross_entropy_mean)
@@ -139,16 +151,13 @@ class CIFAR:
         # decay terms (L2 loss).
         return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
-    @staticmethod
-    def train(loss, global_step):
+    def train(self):
         """
         Train CIFAR-10 model.
 
         Create an optimizer and apply to all trainable variables. Add moving average for all
         trainable variables.
 
-        :param loss: Loss value
-        :param global_step: Step size
         :return train_op: op for training.
         """
         # Variables that affect learning rate.
@@ -156,20 +165,20 @@ class CIFAR:
         decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
 
         # Decay the learning rate exponentially based on the number of steps.
-        lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE, global_step, decay_steps,
+        lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE, self.global_step, decay_steps,
                                         LEARNING_RATE_DECAY_FACTOR, staircase=True)
         tf.scalar_summary('learning_rate', lr)
 
         # Generate moving averages of all losses and associated summaries.
-        loss_averages_op = CIFAR._add_loss_summaries(loss)
+        loss_averages_op = CIFAR._add_loss_summaries(self.loss_value)
 
         # Compute gradients.
         with tf.control_dependencies([loss_averages_op]):
             opt = tf.train.GradientDescentOptimizer(lr)
-            grads = opt.compute_gradients(loss)
+            grads = opt.compute_gradients(self.loss_value)
 
         # Apply gradients.
-        apply_gradient_op = opt.apply_gradients(grads, global_step=global_step)
+        apply_gradient_op = opt.apply_gradients(grads, global_step=self.global_step)
 
         # Add histograms for trainable variables.
         for var in tf.trainable_variables():
@@ -181,13 +190,29 @@ class CIFAR:
                 tf.histogram_summary(var.op.name + '/gradients', grad)
 
         # Track the moving averages of all trainable variables.
-        variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
+        variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, self.global_step)
         variables_averages_op = variable_averages.apply(tf.trainable_variables())
 
         with tf.control_dependencies([apply_gradient_op, variables_averages_op]):
             train_op = tf.no_op(name='train')
 
         return train_op
+
+    @staticmethod
+    def _activation_summary(x):
+        """
+        Helper to create summaries for activations.
+
+        Creates a summary that provides a histogram of activations.
+        Creates a summary that measure the sparsity of activations.
+
+        :param x: Tensor
+        """
+        # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
+        # session. This helps the clarity of presentation on Tensorboard.
+        tensor_name = re.sub('%s_[0-9]*/' % TOWER_NAME, '', x.op.name)
+        tf.histogram_summary(tensor_name + '/activations', x)
+        tf.scalar_summary(tensor_name + '/sparsity', tf.nn.zero_fraction(x))
 
     @staticmethod
     def _add_loss_summaries(total_loss):
@@ -213,7 +238,6 @@ class CIFAR:
             tf.scalar_summary(l.op.name, loss_averages.average(l))
 
         return loss_averages_op
-
 
     @staticmethod
     def _variable_on_cpu(name, shape, initializer):
@@ -249,22 +273,6 @@ class CIFAR:
             weight_decay = tf.mul(tf.nn.l2_loss(var), wd, name='weight_loss')
             tf.add_to_collection('losses', weight_decay)
         return var
-
-    @staticmethod
-    def _activation_summary(x):
-        """
-        Helper to create summaries for activations.
-
-        Creates a summary that provides a histogram of activations.
-        Creates a summary that measure the sparsity of activations.
-
-        :param x: Tensor
-        """
-        # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
-        # session. This helps the clarity of presentation on Tensorboard.
-        tensor_name = re.sub('%s_[0-9]*/' % TOWER_NAME, '', x.op.name)
-        tf.histogram_summary(tensor_name + '/activations', x)
-        tf.scalar_summary(tensor_name + '/sparsity', tf.nn.zero_fraction(x))
 
     @staticmethod
     def distorted_inputs():

@@ -14,22 +14,24 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from model.cifar import CIFAR
-from six.moves import xrange
-from tensorflow.models.image.cifar10 import cifar10
-
-import datetime
-import numpy as np
+from datetime import datetime
 import os.path
-import tensorflow as tf
 import time
+
+import numpy as np
+from six.moves import xrange
+import tensorflow as tf
+
+from model.cifar import CIFAR
 
 # Set up Tensorflow Training Parameters, or "FLAGS"
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar_train',
+tf.app.flags.DEFINE_string('train_dir', 'tmp/cifar_train',
                            "Directory where to write event logs and checkpoints.")
 tf.app.flags.DEFINE_integer('max_steps', 1000000, "Maximum number of batches to run.")
 tf.app.flags.DEFINE_boolean('log_device_placement', False, "Whether to log device placement.")
+tf.app.flags.DEFINE_integer('batch_size', 128, "Number of images to process in a batch.")
+tf.app.flags.DEFINE_string('data_dir', 'tmp/cifar10_data', "Path to the CIFAR-10 data directory.")
 
 
 def train():
@@ -43,15 +45,8 @@ def train():
         # Read in the Training Data, apply distortions
         images, labels = CIFAR.distorted_inputs()
 
-        # Build a Graph that computes the logits predictions from the inference model.
-        logits = CIFAR.inference(images)
-
-        # Calculate loss.
-        loss = CIFAR.loss(logits, labels)
-
-        # Build a Graph that trains the model with one batch of examples and updates the model
-        # parameters.
-        train_op = CIFAR.train(loss, global_step)
+        # Instantiate a CIFAR Model with inference, loss, and train_ops
+        cifar = CIFAR(images, labels, global_step)
 
         # Create a saver.
         saver = tf.train.Saver(tf.all_variables())
@@ -74,7 +69,7 @@ def train():
 
         for step in xrange(FLAGS.max_steps):
             start_time = time.time()
-            _, loss_value = sess.run([train_op, loss])
+            _, loss_value = sess.run([cifar.train_op, cifar.loss_value])
             duration = time.time() - start_time
 
             assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
