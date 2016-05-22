@@ -29,4 +29,29 @@ word.
             cost.
             
 + **Optimizer**: A normal SGD Optimizer with learning rate .05.
-  
+
+## Directory Setup ##
+
+The core file for training the model is `train.py` in the root of the current directory. Running 
+`python train.py` loads the train and test data from the `data` directory, parses it using the code
+in the `preprocessor` subdirectory, and then builds the model computation graph using the Langmod 
+class code in the `model` subdirectory. A specific breakdown is as follows:
+
++ **preprocessor/**: This directory contains a single file, `reader.py` that has a function that
+reads in the raw corpus, and converts it to the input and output bigram pairs for training.
+
++ **model/**: This directory contains the class definition for the `Langmod` class. I use the convention
+of initializing the model with all the model-specific hyperparameters (layer size, learning rate, etc.),
+then building each of the computation graphs for doing inference, calculating loss, then performing
+training. Each of these subgraphs are accessible at training time by doing a field access on a 
+specific instance of the model (see `train.py` for an example).
+
++ **log/**: The log directory consists of the following two subdirectories:
+    
+    1) **checkpoints**: This consists of the saved checkpoints of the model's variables. During the
+                        training process, the entire model is serialized and stored here at the end
+                        of each training epoch.
+    
+    2) **summaries**: This consists of the summary logs for the running of the model. By pointing
+                      Tensorboard to this directory, you can visualize the computation graph, as well
+                      as track the loss function over time.

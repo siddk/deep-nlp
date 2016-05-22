@@ -61,13 +61,13 @@ def main(_):
             # Split up batches
             print ""
             counter = 0
-            start = time.time()
+            start_time = time.time()
             for start, end in zip(range(0, len(x), bsz), range(bsz, len(x), bsz)):
                 counter += 1
                 summary, _, cost = sess.run([merged, langmod.train_op, langmod.loss_val],
                                             feed_dict={langmod.X: x[start:end],
                                                        langmod.Y: y[start:end]})
-                train_writer.add_summary(summary, counter + (len(x) * epoch))
+                train_writer.add_summary(summary, counter + ((len(x) / bsz) * epoch))
                 if counter % 100 == 0:
                     print "Training loss at batch", counter, "of epoch", epoch, "is: ", cost
 
@@ -76,14 +76,14 @@ def main(_):
                                              feed_dict={langmod.X: test_x,
                                                         langmod.Y: test_y})
 
-            test_writer.add_summary(tst_summary, len(x) * epoch)
+            test_writer.add_summary(tst_summary, (len(x) / bsz) * epoch)
             print ""
             print "Test loss after epoch", epoch, "is: ", tst_cost
 
             # Save model
             checkpoint_path = os.path.join(FLAGS.log_dir, 'model.ckpt')
             saver.save(sess, checkpoint_path, bsz * epoch)
-            print "Epoch", epoch, "took: ", time.time() - start, "seconds!"
+            print "Epoch", epoch, "took: ", time.time() - start_time, "seconds!"
             print ""
 
 
