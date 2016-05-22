@@ -15,7 +15,7 @@ Note: Currently no results shown, as the model takes several hours to train on G
               actually occur in the training, it is done implicitly during the call to the loss
               function.
               
-+ **Layer**: This model follows the AlexNet CNN convention. See AlexNet paper for detailed 
++ **Layers**: This model follows the AlexNet CNN convention. See AlexNet paper for detailed 
              descriptions of layers. The layers are broken up as follows:
   
   1) **Conv1**: Convolution Layer with ReLU Activation.
@@ -38,10 +38,10 @@ Note: Currently no results shown, as the model takes several hours to train on G
               in other words, if the output of the previous layer is "x", then this layer returns
               Softmax(Wx + b), where "W" and "b" are weight matrices.
 
-+ **Loss**: We the sum of the cross-entropy loss between the logits and the true predictions and the
++ **Loss**: The sum of the cross-entropy loss between the logits and the true predictions and the
             L2 Norms of the weight matrices at each layer (to help with regularization). 
             
-+ **Optimizer**: Here we use a special version of the SGD optimizer with a Learning Rate that decays
++ **Optimizer**: A special version of the SGD optimizer with a Learning Rate that decays
                  exponentially over time.
   
   
