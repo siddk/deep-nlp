@@ -26,12 +26,12 @@ from model.cifar import CIFAR
 
 # Set up Tensorflow Training Parameters, or "FLAGS"
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('train_dir', 'tmp/cifar_train',
+tf.app.flags.DEFINE_string('train_dir', 'log/cifar_train',
                            "Directory where to write event logs and checkpoints.")
 tf.app.flags.DEFINE_integer('max_steps', 1000000, "Maximum number of batches to run.")
 tf.app.flags.DEFINE_boolean('log_device_placement', False, "Whether to log device placement.")
 tf.app.flags.DEFINE_integer('batch_size', 128, "Number of images to process in a batch.")
-tf.app.flags.DEFINE_string('data_dir', 'tmp/cifar10_data', "Path to the CIFAR-10 data directory.")
+tf.app.flags.DEFINE_string('data_dir', 'log/cifar10_data', "Path to the CIFAR-10 data directory.")
 
 
 def train():

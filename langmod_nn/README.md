@@ -48,10 +48,10 @@ specific instance of the model (see `train.py` for an example).
 
 + **log/**: The log directory consists of the following two subdirectories:
     
-    1) **checkpoints**: This consists of the saved checkpoints of the model's variables. During the
+    1) **checkpoints/**: This consists of the saved checkpoints of the model's variables. During the
                         training process, the entire model is serialized and stored here at the end
                         of each training epoch.
     
-    2) **summaries**: This consists of the summary logs for the running of the model. By pointing
+    2) **summaries/**: This consists of the summary logs for the running of the model. By pointing
                       Tensorboard to this directory, you can visualize the computation graph, as well
                       as track the loss function over time.
