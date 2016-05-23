@@ -64,19 +64,25 @@ def main(_):
             start_time = time.time()
             for start, end in zip(range(0, len(x), bsz), range(bsz, len(x), bsz)):
                 counter += 1
-                summary, _, cost = sess.run([merged, langmod.train_op, langmod.loss_val],
-                                            feed_dict={langmod.X: x[start:end],
-                                                       langmod.Y: y[start:end]})
-                train_writer.add_summary(summary, counter + ((len(x) / bsz) * epoch))
+                _ = sess.run([langmod.train_op], feed_dict={langmod.X: x[start:end],
+                                                            langmod.Y: y[start:end]})
                 if counter % 100 == 0:
-                    print "Training loss at batch", counter, "of epoch", epoch, "is: ", cost
+                    print "Processing batch", counter, "of epoch", epoch
+
+            # Evaluate Training loss
+            tr_summary, tr_cost = sess.run([merged, langmod.loss_val],
+                                           feed_dict={langmod.X: x,
+                                                      langmod.Y: y})
+            train_writer.add_summary(tr_summary, epoch)
+            print ""
+            print "Training loss after epoch", epoch, "is: ", tr_cost
 
             # Evaluate Test Loss
             tst_summary, tst_cost = sess.run([merged, langmod.loss_val],
                                              feed_dict={langmod.X: test_x,
                                                         langmod.Y: test_y})
 
-            test_writer.add_summary(tst_summary, (len(x) / bsz) * epoch)
+            test_writer.add_summary(tst_summary, epoch)
             print ""
             print "Test loss after epoch", epoch, "is: ", tst_cost
 
