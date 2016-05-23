@@ -55,3 +55,18 @@ specific instance of the model (see `train.py` for an example).
     2) **summaries/**: This consists of the summary logs for the running of the model. By pointing
                       Tensorboard to this directory, you can visualize the computation graph, as well
                       as track the loss function over time.
+                      
+## Results ##
+
+Each epoch (around 480,000 examples) takes about 10 minutes to train on CPU. The following is a 
+graph of training and test loss over time:
+
+Training loss (evaluated at each batch --> leads to high variance):
+
+![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/log/train.png)
+
+Test loss (evaluated after each epoch):
+
+![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/log/test.png)
+
+Further evaluation (log-likelihood of corpus, etc.) TBA.

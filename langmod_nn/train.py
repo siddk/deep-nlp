@@ -14,7 +14,7 @@ import os
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('log_dir', 'log/checkpoints', "Directory where to write checkpoints.")
 tf.app.flags.DEFINE_string('summary_dir', 'log/summaries', 'Directory where to write summaries.')
-tf.app.flags.DEFINE_integer('epochs', 10, "Maximum number of epochs to run.")
+tf.app.flags.DEFINE_integer('epochs', 6, "Maximum number of epochs to run.")
 tf.app.flags.DEFINE_integer('batch_size', 128, "Number of bigrams to process in a batch.")
 tf.app.flags.DEFINE_float('learning_rate', 0.05, "Learning rate for SGD.")
 tf.app.flags.DEFINE_integer('embedding_size', 50, "Dimension of the embeddings.")
