@@ -63,10 +63,10 @@ graph of training and test loss over time:
 
 Training loss (evaluated at each batch --> leads to high variance):
 
-![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/log/train.png)
+![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/data/train.png)
 
 Test loss (evaluated after each epoch):
 
-![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/log/test.png)
+![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/data/test.png)
 
 Further evaluation (log-likelihood of corpus, etc.) TBA.
