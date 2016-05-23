@@ -69,4 +69,8 @@ Test loss (evaluated after each epoch):
 
 ![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/data/test.png)
 
+Training loss (red) vs Test loss (blue) across epochs:
+
+![img](https://github.com/siddk/deep-nlp/blob/master/langmod_nn/data/test_train.png)
+
 Further evaluation (log-likelihood of corpus, etc.) TBA.
