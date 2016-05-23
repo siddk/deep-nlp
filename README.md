@@ -34,7 +34,7 @@ subdirectories is broken up in the following way:
                    
 **model/**:
   
-  - **<model>.py**: Class definition for the model's neural network. Tensorflow at its core is a 
+  - **model.py**: Class definition for the model's neural network. Tensorflow at its core is a 
                   system for building symbolic computational graphs, and everything in Tensorflow
                   is either expressed as a raw Tensor, or a Tensor operation. Because of this,
                   building a model consists of building different graphs and operations to handle
