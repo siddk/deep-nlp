@@ -14,7 +14,7 @@ FLAGS = tf.app.flags.FLAGS
 class Langmod:
     def __init__(self):
         """
-        Initialize a Langmod Neural Network with the training and test data.
+        Initialize a Langmod Neural Network.
         """
         self.epochs, self.batch_size = FLAGS.epochs, FLAGS.batch_size
         self.learning_rate, self.vocab_size = FLAGS.learning_rate, FLAGS.vocab_size

@@ -18,7 +18,7 @@ def get_bigrams(data_path, vocab=None):
     Vectorize a data file, turning it into bigram pairs of integers.
 
     :param data_path: Path to data.
-    :return: X, Y pair consisting of first word, second word encoded one-hot.
+    :return: X, Y pair consisting of first word, second word encoded label-hot.
     """
     # Read data, add STOP symbols between sentences
     with tf.gfile.GFile(data_path, 'r') as f:
