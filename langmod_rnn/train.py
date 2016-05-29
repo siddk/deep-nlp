@@ -71,8 +71,5 @@ def main(_):
             langmod.assign_lr(sess, FLAGS.learning_rate * lr_decay)
 
 
-
-
-
 if __name__ == "__main__":
     tf.app.run()
