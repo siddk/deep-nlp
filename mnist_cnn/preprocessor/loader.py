@@ -7,6 +7,7 @@ CNN Model.
 Credit: Tensorflow Tutorial
 https://github.com/tensorflow/tensorflow/blob/master/tensorflow/models/image/mnist/convolutional.py
 """
+from __future__ import division
 import gzip
 import numpy
 import os

@@ -29,12 +29,15 @@ class MnistCNN:
         self.Y = tf.placeholder(tf.int64, shape=[self.batch_size])
         self.eval_X = tf.placeholder(tf.float32, shape=input_shape)
 
+        # Instantiate trainable weights (do separately so validation/training can share)
+        self.instantiate_weights()
+
         # Build the model, return the logits and the fully-connected weights (for regularization)
-        self.logits, self.fc1_w, self.fc1_b, self.fc2_w, self.fc2_b = self.inference(True)
+        self.logits = self.inference(True)
 
         # Build prediction ops using the logits for both training and eval.
         self.train_prediction = tf.nn.softmax(self.logits)
-        self.eval_prediction = tf.nn.softmax(self.inference(False)[0])
+        self.eval_prediction = tf.nn.softmax(self.inference(False))
 
         # Build Accuracy ops using the predictions, add summaries
         self.train_acc = tf.reduce_mean(
@@ -47,6 +50,27 @@ class MnistCNN:
         # Set up the training_operation
         self.learning_rate, self.train_op = self.train()
 
+    def instantiate_weights(self):
+        """
+        Initialize all the trainable weight tensors for training.
+        """
+        # 1st Convolution Layer Weights and Bias
+        self.conv1_w = init_weight([5, 5, self.channels, 32], 'Conv1_Weight')  # 5x5 filter, depth 32
+        self.conv1_b = init_bias(32, 0.0, 'Conv1_Bias')
+
+        # 2nd Convolution Layer Weights and Bias
+        self.conv2_w = init_weight([5, 5, 32, 64], 'Conv2_Weight')  # 5x5 filter, depth 64
+        self.conv2_b = init_bias(64, 0.1, 'Conv2_Bias')
+
+        # Fully Connected Layer 1 -> ReLU Activation
+        self.fc1_w = init_weight([self.image_size // 4 * self.image_size // 4 * 64, self.hidden],
+                            'FC1_Weight')
+        self.fc1_b = init_bias(self.hidden, 0.1, 'FC1_Bias')
+
+        # Fully Connected Layer 2 -> for softmax (actual softmax performed in loss function)
+        self.fc2_w = init_weight([self.hidden, self.num_labels], 'FC2_Weight')
+        self.fc2_b = init_bias(self.num_labels, 0.1, 'FC2_Bias')
+
     def inference(self, train=False):
         """
         Build the core of the model, initialize all convolutional and feed-forward layers, with the
@@ -55,26 +79,18 @@ class MnistCNN:
         :param train: Boolean if training or eval, necessary for including dropout.
         :return: Tuple of resulting logits, and the feed-forward trainable weights for L2 Loss.
         """
-        # 1st Convolution Layer Weights and Bias
-        conv1_w = init_weight([5, 5, self.channels, 32], 'Conv1_Weight')  # 5 x 5 filter, depth 32
-        conv1_b = init_bias(32, 0.0, 'Conv1_Bias')
-
         # 2D Convolution Layer, then Bias + ReLU, then Pooling Layer (add conditional train/eval)
         if train:
-            conv1 = tf.nn.conv2d(self.X, conv1_w, strides=[1, 1, 1, 1], padding='SAME')
+            conv1 = tf.nn.conv2d(self.X, self.conv1_w, strides=[1, 1, 1, 1], padding='SAME')
         else:
-            conv1 = tf.nn.conv2d(self.eval_X, conv1_w, strides=[1, 1, 1, 1], padding='SAME')
+            conv1 = tf.nn.conv2d(self.eval_X, self.conv1_w, strides=[1, 1, 1, 1], padding='SAME')
 
-        relu1 = tf.nn.relu(tf.nn.bias_add(conv1, conv1_b))
+        relu1 = tf.nn.relu(tf.nn.bias_add(conv1, self.conv1_b))
         pool1 = tf.nn.max_pool(relu1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-        # 2nd Convolution Layer Weights and Bias
-        conv2_w = init_weight([5, 5, 32, 64], 'Conv2_Weight')  # 5 x 5 filter, depth 64
-        conv2_b = init_bias(64, 0.1, 'Conv2_Bias')
-
         # 2D Convolution Layer, then Bias + ReLU, then Pooling Layer
-        conv2 = tf.nn.conv2d(pool1, conv2_w, strides=[1, 1, 1, 1], padding='SAME')
-        relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_b))
+        conv2 = tf.nn.conv2d(pool1, self.conv2_w, strides=[1, 1, 1, 1], padding='SAME')
+        relu2 = tf.nn.relu(tf.nn.bias_add(conv2, self.conv2_b))
         pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
         # Reshape 4D Pool Tensor into a 2D Tensor
@@ -82,20 +98,14 @@ class MnistCNN:
         reshape = tf.reshape(pool2, [pool_shape[0], pool_shape[1] * pool_shape[2] * pool_shape[3]])
 
         # Fully Connected Layer 1 -> ReLU Activation
-        fc1_w = init_weight([self.image_size // 4 * self.image_size // 4 * 64, self.hidden],
-                            'FC1_Weight')
-        fc1_b = init_bias(self.hidden, 0.1, 'FC1_Bias')
-        hidden = tf.nn.relu(tf.matmul(reshape, fc1_w) + fc1_b)
+        hidden = tf.nn.relu(tf.matmul(reshape, self.fc1_w) + self.fc1_b)
 
         # Add dropout --> Only during training
         if train:
             hidden = tf.nn.dropout(hidden, 0.5)
 
         # Fully Connected Layer 2 -> for softmax (actual softmax performed in loss function)
-        fc2_w = init_weight([self.hidden, self.num_labels], 'FC2_Weight')
-        fc2_b = init_bias(self.num_labels, 0.1, 'FC2_Bias')
-
-        return tf.matmul(hidden, fc2_w) + fc2_b, fc1_w, fc1_b, fc2_w, fc2_b
+        return tf.matmul(hidden, self.fc2_w) + self.fc2_b
 
     def loss(self):
         """

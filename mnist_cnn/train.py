@@ -10,6 +10,7 @@ Credit: Tensorflow MNIST CNN Tutorial
 from __future__ import division
 from model.mnist_cnn import MnistCNN
 from preprocessor.loader import *
+from six.moves import xrange
 import numpy as np
 import sys
 import tensorflow as tf
@@ -23,7 +24,7 @@ tf.app.flags.DEFINE_string('summary_dir', 'log/summaries', 'Directory where to w
 tf.app.flags.DEFINE_string('data_dir', 'data/', 'Directory where to store data.')
 tf.app.flags.DEFINE_integer('image_size', 28, 'Size of the image (width/length).')
 tf.app.flags.DEFINE_integer('num_channels', 1, 'Number of image channels.')
-tf.app.flags.DEFINE_integer('pixel_depth', 255, 'Depth of pixel color.')
+tf.app.flags.DEFINE_float('pixel_depth', 255., 'Depth of pixel color.')
 tf.app.flags.DEFINE_integer('hidden_size', 512, 'Size of the hidden feed-forward layer.')
 tf.app.flags.DEFINE_float('l2_discount', .0005, 'Factor to discount L2 Regularization by.')
 tf.app.flags.DEFINE_float('learning_rate', .01, 'Base learning rate to start with.')
@@ -119,7 +120,8 @@ def main(_):
                                                          1000 * elapsed_time / FLAGS.eval_frequency)
                 print 'Minibatch loss: %.3f, learning rate: %.6f' % (l, lr)
                 print 'Minibatch accuracy: %.3f%%' % train_acc
-                print 'Validation error: %.3f%%' % val_acc
+                print 'Validation accuracy: %.3f%%' % val_acc
+                print ""
 
                 # Add summaries
                 train_writer.add_summary(tr_summary, step)

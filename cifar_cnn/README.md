@@ -6,6 +6,7 @@ deer, dog, frog, horse, ship, and truck.
 Note: Currently no results shown, as the model takes several hours to train on GPU.
 
 ## Model Setup ##
+
 + **Input**: 28 x 28 Pixel Image. At training time, a series of distortions are performed, to help
              with model regularization. At evaluation time, the regular images are used.
              

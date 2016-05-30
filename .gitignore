@@ -4,7 +4,8 @@ __pycache__/
 *$py.class
 
 # Log files
-log/
+tmp/
+log/checkpoints/
 
 # C extensions
 *.so
@@ -69,5 +70,3 @@ target/
 
 # PyCharm
 .idea/
-
-tmp/
