@@ -30,6 +30,9 @@ class Langmod:
         # Build the loss computation graph, using the logits.
         self.loss_val = self.loss()
 
+        # Calculate the log likelihood of the data, using the logits.
+        self.log_lik = self.log_likelihood()
+
         # Set up the training operation.
         self.train_op = self.train()
 
@@ -62,6 +65,18 @@ class Langmod:
         tf.scalar_summary('Loss', cost)  # Add a summary to track Loss over time
 
         return cost
+
+    def log_likelihood(self):
+        """
+        Build the computation graph for calculating the log likelihood of the data.
+        """
+        softmax = tf.nn.softmax(self.logits)
+        one_hot_y = tf.one_hot(self.Y, self.vocab_size, 1.0, 0.0)
+        probabilities = tf.reduce_max(tf.mul(softmax, one_hot_y), reduction_indices=[1])
+        log_lik = tf.reduce_sum(tf.log(probabilities))
+        tf.scalar_summary('Log Likelihood', log_lik)
+
+        return log_lik
 
     def train(self):
         """

@@ -70,21 +70,21 @@ def main(_):
                     print "Processing batch", counter, "of epoch", epoch
 
             # Evaluate Training loss
-            tr_summary, tr_cost = sess.run([merged, langmod.loss_val],
-                                           feed_dict={langmod.X: x,
-                                                      langmod.Y: y})
+            tr_summary, tr_cost, tr_ll = sess.run([merged, langmod.loss_val, langmod.log_lik],
+                                                  feed_dict={langmod.X: x, langmod.Y: y})
             train_writer.add_summary(tr_summary, epoch)
             print ""
             print "Training loss after epoch", epoch, "is: ", tr_cost
+            print "Training Log Likelihood after epoch", epoch, "is: ", tr_ll
 
             # Evaluate Test Loss
-            tst_summary, tst_cost = sess.run([merged, langmod.loss_val],
-                                             feed_dict={langmod.X: test_x,
-                                                        langmod.Y: test_y})
+            tst_summary, tst_cost, tst_ll = sess.run([merged, langmod.loss_val, langmod.log_lik],
+                                                     feed_dict={langmod.X: test_x,langmod.Y: test_y})
 
             test_writer.add_summary(tst_summary, epoch)
             print ""
             print "Test loss after epoch", epoch, "is: ", tst_cost
+            print "Test Log Likelihood after epoch", epoch, "is: ", tst_ll
 
             # Save model
             checkpoint_path = os.path.join(FLAGS.log_dir, 'model.ckpt')
