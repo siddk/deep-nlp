@@ -55,7 +55,7 @@ class MnistCNN:
         Initialize all the trainable weight tensors for training.
         """
         # 1st Convolution Layer Weights and Bias
-        self.conv1_w = init_weight([5, 5, self.channels, 32], 'Conv1_Weight')  # 5x5 filter, depth 32
+        self.conv1_w = init_weight([5, 5, self.channels, 32], 'Conv1_Weight')  # 5x5 filter, 32 deep
         self.conv1_b = init_bias(32, 0.0, 'Conv1_Bias')
 
         # 2nd Convolution Layer Weights and Bias
