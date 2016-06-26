@@ -70,3 +70,6 @@ target/
 
 # PyCharm
 .idea/
+
+# CSV
+*.csv
