@@ -73,3 +73,6 @@ target/
 
 # CSV
 *.csv
+
+# Data
+data/
