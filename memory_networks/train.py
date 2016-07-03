@@ -20,9 +20,9 @@ import sys
 FLAGS = tf.flags.FLAGS
 
 # Data Parameters
-tf.flags.DEFINE_integer("task_id", 3, "bAbI Task (1 - 20). See bAbI Task README for more info.")
+tf.flags.DEFINE_integer("task_id", 2, "bAbI Task (1 - 20). See bAbI Task README for more info.")
 tf.flags.DEFINE_string("data_dir", "data/en", "Path to 1k Example Task Data. For 10k, use en-10k.")
-tf.app.flags.DEFINE_string('log_dir', 'log/checkpoints/task3', "Directory to write checkpoints.")
+tf.app.flags.DEFINE_string('log_dir', 'log/checkpoints/task2', "Directory to write checkpoints.")
 
 # Model Parameters
 tf.flags.DEFINE_integer("memory_size", 50, "Maximum number of sentences in memory.")
@@ -31,6 +31,7 @@ tf.flags.DEFINE_integer("hops", 3, "Number of hops in the Memory Network.")
 
 # Train Parameters
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
+tf.flags.DEFINE_integer("linear_start_epochs", 50, "Number of linear epochs.")
 tf.flags.DEFINE_integer("epochs", 100, "Number of epochs to train for.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
 tf.flags.DEFINE_float("learning_rate", 0.01, "Learning rate for Adam Optimizer.")
@@ -94,7 +95,17 @@ def main(_):
         print "Variables Initialized!"
         print ""
 
-        # Run through the epochs
+        # Run through the linear start epochs
+        for t in range(1, FLAGS.linear_start_epochs + 1):
+            print "Linear Start Epoch:", t
+            for start in range(0, n_train, batch_size):
+                end = start + batch_size
+                s, q, a = trainS[start:end], trainQ[start:end], trainA[start:end]
+                _, _ = sess.run([memn2n.linear_loss_val, memn2n.linear_train_op],
+                                feed_dict={memn2n.stories: s, memn2n.questions: q,
+                                           memn2n.answers: a})
+
+        # Run through the epochs (for real)
         for t in range(1, FLAGS.epochs + 1):
             total_cost = 0.
             for start in range(0, n_train, batch_size):

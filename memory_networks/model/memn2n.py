@@ -43,13 +43,16 @@ class MemN2N:
         self.instantiate_weights()
 
         # Build the model, return the logits
-        self.logits = self.inference()
+        self.linear_logits = self.inference(True)
+        self.logits = self.inference(False)
 
         # Build the loss computation graph, using the logits
-        self.loss_val = self.loss()
+        self.linear_loss_val = self.loss(True)
+        self.loss_val = self.loss(False)
 
         # Set up the training_operation
-        self.train_op = self.train()
+        self.linear_train_op = self.train(True)
+        self.train_op = self.train(False)
 
         # Set up prediction operations
         self.predict_op = tf.argmax(self.logits, 1, name="predict_op")
@@ -98,7 +101,7 @@ class MemN2N:
                                  name="W")
             self.nil_vars.append("W")
 
-    def inference(self):
+    def inference(self, linear_start=True):
         """
         Build the core of the model, describing all transformations and connections between
         the inputs. Setup the entire computation graph.
@@ -129,7 +132,10 @@ class MemN2N:
                 dotted = tf.reduce_sum(m_a * u_temp, 2)
 
                 # Calculate probabilities
-                probs = tf.nn.softmax(dotted)
+                if linear_start:
+                    probs = dotted
+                else:
+                    probs = tf.nn.softmax(dotted)
                 probs_temp = tf.transpose(tf.expand_dims(probs, -1), [0, 2, 1])
 
                 # Compute Memory Embedding C -> Position Encoding
@@ -145,22 +151,30 @@ class MemN2N:
 
             return tf.matmul(u[-1], tf.transpose(self.W, [1, 0]))
 
-    def loss(self):
+    def loss(self, linear_start=True):
         """
         Compute the loss computation graph, using the logits.
         """
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.logits,
-                                                                tf.cast(self.answers, tf.float32),
-                                                                name="cross_entropy")
+        if linear_start:
+            cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.linear_logits,
+                                                                    tf.cast(self.answers, tf.float32),
+                                                                    name="linear_cross_entropy")
+        else:
+            cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.logits,
+                                                                    tf.cast(self.answers, tf.float32),
+                                                                    name="cross_entropy")
         cross_entropy_sum = tf.reduce_sum(cross_entropy, name="cross_entropy_sum")
         return cross_entropy_sum
 
-    def train(self):
+    def train(self, linear_start=True):
         """
         Compute the training operation computation graph.
         """
         self.opt = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FLAGS.epsilon)
-        grads_and_vars = self.opt.compute_gradients(self.loss_val)
+        if linear_start:
+            grads_and_vars = self.opt.compute_gradients(self.linear_loss_val)
+        else:
+            grads_and_vars = self.opt.compute_gradients(self.loss_val)
         grads_and_vars = [(tf.clip_by_norm(g, FLAGS.max_grad_norm), v) for g, v in grads_and_vars]
         grads_and_vars = [(add_gradient_noise(g), v) for g,v in grads_and_vars]
         nil_grads_and_vars = []
@@ -169,9 +183,11 @@ class MemN2N:
                 nil_grads_and_vars.append((zero_nil_slot(g), v))
             else:
                 nil_grads_and_vars.append((g, v))
-        train_op = self.opt.apply_gradients(nil_grads_and_vars, name="train_op")
+        if linear_start:
+            train_op = self.opt.apply_gradients(nil_grads_and_vars, name="linear_train_op")
+        else:
+            train_op = self.opt.apply_gradients(nil_grads_and_vars, name="train_op")
         return train_op
-
 
 
 def position_encoding(sentence_size, embedding_size):
