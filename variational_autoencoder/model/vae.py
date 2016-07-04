@@ -32,8 +32,8 @@ class VAE:
 
         # Build the underlying latent space distribution, and sample from it. This is done very
         # simply, by drawing z = mu + sigma * noise
-        noise = tf.random_normal((FLAGS.batch_size, FLAGS.z_dim))
-        self.z = tf.add(self.z_mean, tf.mul(tf.sqrt(tf.exp(self.z_log_sigma_sq)), noise))
+        self.noise = tf.random_normal([FLAGS.batch_size, FLAGS.z_dim], 0, 1, dtype=tf.float32)
+        self.z = tf.add(self.z_mean, tf.mul(tf.sqrt(tf.exp(self.z_log_sigma_sq)), self.noise))
 
         # Use the generator to determine the mean of Bernoulli Distribution of reconstructed input.
         self.x_reconstructed_mean = self.build_generator_net()

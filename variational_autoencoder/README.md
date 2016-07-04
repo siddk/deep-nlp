@@ -16,3 +16,7 @@ set, in 20-dimensional latent space:
 
 <img src="https://github.com/siddk/deep-nlp/blob/master/variational_autoencoder/results/reconstructed.png" width="500">
 
+And here is a walk of the latent space (in 2-dimensions) maps to generated outputs. Dimension 1 of 
+the latent space is on the horizontal axis, while Dimension 2 is on the vertical:
+
+<img src="https://github.com/siddk/deep-nlp/blob/master/variational_autoencoder/results/walk.png" width="500">

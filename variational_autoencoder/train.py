@@ -21,9 +21,9 @@ tf.app.flags.DEFINE_string('log_dir', 'log/checkpoints/', "Directory to write ch
 # General Model Parameters
 tf.app.flags.DEFINE_integer('x_dim', 784, "Dimensionality of input (an MNIST image is 784 pixels.")
 tf.app.flags.DEFINE_integer('z_dim', 2, "Dimensionality of latent space.")
-tf.app.flags.DEFINE_integer('batch_size', 32, "Mini-batch size for training.")
+tf.app.flags.DEFINE_integer('batch_size', 100, "Mini-batch size for training.")
 tf.app.flags.DEFINE_float('learning_rate', .001, "Learning rate for training.")
-tf.app.flags.DEFINE_integer('epochs', 75, 'Number of epochs of training.')
+tf.app.flags.DEFINE_integer('epochs', 15, 'Number of epochs of training.')
 tf.app.flags.DEFINE_integer('display_step', 2, 'Interval to print training progress.')
 
 # Set Recognition Layer Parameters
@@ -98,12 +98,11 @@ def main(_):
             nx = ny = 20
             x_values = np.linspace(-3, 3, nx)
             y_values = np.linspace(-3, 3, ny)
-
             canvas = np.empty((28 * ny, 28 * nx))
             for i, yi in enumerate(x_values):
                 for j, xi in enumerate(y_values):
-                    z_mu = np.array([[xi, yi]])
-                    x_mean = vae.generate(z_mu)
+                    z_mu = np.tile(np.array([[xi, yi]]), (FLAGS.batch_size, 1))
+                    x_mean = vae.generate(sess, z_mu)
                     canvas[(nx-i-1)*28:(nx-i)*28, j*28:(j+1)*28] = x_mean[0].reshape(28, 28)
 
             plt.figure(figsize=(8, 10))
@@ -111,8 +110,6 @@ def main(_):
             plt.imshow(canvas, origin="upper")
             plt.tight_layout()
             plt.show()
-            import ipdb
-            ipdb.set_trace()
 
 if __name__ == "__main__":
     tf.app.run()
