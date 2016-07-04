@@ -14,5 +14,5 @@ A large portion of the setup for this model was derived from
 Here are the results of the VAE trying to reconstruct an image given a seed from the MNIST test
 set, in 20-dimensional latent space:
 
-![alt text](https://github.com/siddk/deep-nlp/blob/master/variational_autoencoder/results/reconstructed.png "Reconstructed MNIST Digits")
+<img src="https://github.com/siddk/deep-nlp/blob/master/variational_autoencoder/results/reconstructed.png" width="500">
 
