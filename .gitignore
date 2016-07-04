@@ -76,3 +76,4 @@ target/
 
 # Data
 data/
+MNIST_data/
