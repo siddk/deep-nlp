@@ -60,7 +60,10 @@ class Seq2Seq:
         # Build inference pipeline
         if forward_only:
             (self.outputs, self.losses), self.deep_embedding = self.inference(True)
-            # TODO
+            if self.output_proj is not None:
+                for b in xrange(len(buckets)):
+                    self.outputs[b] = [tf.matmul(output, self.output_proj[0]) + self.output_proj[1]
+                                       for output in self.outputs[b]]
         else:
             (self.outputs, self.losses), self.deep_embedding = self.inference(False)
 

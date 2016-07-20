@@ -29,7 +29,7 @@ def load_data():
     # Setup Path Variables
     fr_train_path = os.path.join(FLAGS.data_dir, "raw/french-senate-0.txt")
     en_train_path = os.path.join(FLAGS.data_dir, "raw/english-senate-0.txt")
-    fr_test_path = os.path.join(FLAGS.data_dir, "raw/english-senate-2.txt")
+    fr_test_path = os.path.join(FLAGS.data_dir, "raw/french-senate-2.txt")
 
     # Build vocabularies
     fr_vocab_path = os.path.join(FLAGS.data_dir, "vocabulary/fr.vocab")
@@ -63,7 +63,7 @@ def get_tokens(data_path, token_path, vocab_path):
         with gfile.GFile(data_path, 'rb') as data_file:
             with gfile.GFile(token_path, 'wb') as token_file:
                 for line in data_file:
-                    token_ids = [vocab.get(w, UNK) for w in line.split()]
+                    token_ids = [vocab.get(w, UNK_ID) for w in line.split()]
                     token_file.write(" ".join([str(tok) for tok in token_ids]) + "\n")
 
 

@@ -20,7 +20,7 @@ tf.app.flags.DEFINE_string("data_dir", "data/", "Data directory")
 tf.app.flags.DEFINE_string("log_dir", "log/", "Training directory.")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200, "How many training steps per checkpoint.")
 
-tf.app.flags.DEFINE_integer("max_vsz", 20000, "Maximum size of a single language vocabulary.")
+tf.app.flags.DEFINE_integer("max_vsz", 15000, "Maximum size of a single language vocabulary.")
 tf.app.flags.DEFINE_integer("max_size", 50, "Maximum size of sentence.")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
@@ -29,7 +29,6 @@ tf.app.flags.DEFINE_float("max_gradient_norm", 5.0, "Clip gradients to this norm
 tf.app.flags.DEFINE_integer("batch_size", 64, "Batch size to use during training.")
 tf.app.flags.DEFINE_integer("size", 512, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
-
 
 buckets = [(10, 5), (15, 10), (25, 20), (35, 30), (50, 50)]
 
@@ -66,10 +65,6 @@ def main(_):
     Main function, loads and vectorizes data, builds model, then proceeds to start the training
     process.
     """
-    if tf.gfile.Exists(FLAGS.log_dir):
-        tf.gfile.DeleteRecursively(FLAGS.log_dir)
-    tf.gfile.MakeDirs(FLAGS.log_dir)
-
     # Load data (paths to the vocab, and tokens)
     fr_vocab, en_vocab, fr_train, en_train, _ = load_data()
 
