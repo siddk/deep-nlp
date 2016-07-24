@@ -59,13 +59,13 @@ class Seq2Seq:
 
         # Build inference pipeline
         if forward_only:
-            (self.outputs, self.losses), self.deep_embedding = self.inference(True)
+            self.outputs, self.losses = self.inference(True)
             if self.output_proj is not None:
                 for b in xrange(len(buckets)):
                     self.outputs[b] = [tf.matmul(output, self.output_proj[0]) + self.output_proj[1]
                                        for output in self.outputs[b]]
         else:
-            (self.outputs, self.losses), self.deep_embedding = self.inference(False)
+            self.outputs, self.losses = self.inference(False)
 
         # Set up training graph
         self.train()
@@ -96,8 +96,16 @@ class Seq2Seq:
         """
         Instantiate network weights and RNN Cells, for use in the inference process.
         """
-        self.single_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden)
+        self.single_cell = tf.nn.rnn_cell.GRUCell(self.hidden)
         self.cell = tf.nn.rnn_cell.MultiRNNCell([self.single_cell] * self.num_layers)
+
+        self.inter_weight = tf.get_variable("inter_w", [self.num_layers * self.hidden,
+                                                        self.num_layers * self.hidden])
+        self.inter_bias = tf.get_variable("inter_b", [self.num_layers * self.hidden])
+
+        self.embed_weight = tf.get_variable("embed_w", [self.num_layers * self.hidden,
+                                                        self.num_layers * self.hidden])
+        self.embed_bias = tf.get_variable("embed_b", [self.num_layers * self.hidden])
 
     def inference(self, do_decode):
         """
@@ -106,31 +114,42 @@ class Seq2Seq:
         :param do_decode: Boolean if to feed previous output, or use true output in decode step.
         :return: Tuple of RNN Outputs, and RNN Losses
         """
-        source_vsz, target_vsz, hidden = self.source_vsz, self.target_vsz, self.hidden
-        output_proj, cell = self.output_proj, self.cell
+        # source_vsz, target_vsz, hidden = self.source_vsz, self.target_vsz, self.hidden
+        # output_proj, cell = self.output_proj, self.cell
 
         # Setup placeholder for stealing the intermediate state, for use later.
-        intermediate_embedding = None
+        self.intermediate_embeddings = []
+        outputs, losses = [], []
 
-        # Define forward push function, to feed to seq2seq with buckets:
-        def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
-            global intermediate_embedding
-            encoder_cell = tf.nn.rnn_cell.EmbeddingWrapper(cell, embedding_classes=source_vsz,
-                                                           embedding_size=hidden)
-            _, encoder_state = tf.nn.rnn(encoder_cell, encoder_inputs, dtype=tf.float32)
-            intermediate_embedding = encoder_state
+        # Bucket
+        for j, bucket in enumerate(self.buckets):
+            with tf.variable_scope(tf.get_variable_scope(), reuse=True if j > 0 else None):
+                encoder_cell = tf.nn.rnn_cell.EmbeddingWrapper(self.cell,
+                                                               embedding_classes=self.source_vsz,
+                                                               embedding_size=self.hidden)
+                _, encoder_state = tf.nn.rnn(encoder_cell, self.encoder_inputs[:bucket[0]],
+                                             dtype=tf.float32)
+                self.intermediate_embeddings.append(encoder_state)
+                # # Transform the encoder state through a ReLU Hidden Layer
+                # intermediate_state = tf.matmul(encoder_state, self.inter_weight) + self.inter_bias
+                # intermediate_relu = tf.nn.relu(intermediate_state, "inter_relu")
+                #
+                # # Linear transform, get and append intermediate embedding
+                # embedding = tf.matmul(intermediate_relu, self.embed_weight) + self.embed_bias
+                # self.intermediate_embeddings.append(embedding)
 
-            return tf.nn.seq2seq.embedding_rnn_decoder(decoder_inputs, encoder_state, cell,
-                                                       target_vsz, hidden,
-                                                       output_projection=output_proj,
-                                                       feed_previous=do_decode)
+                # Get decoder outputs
+                bucket_outputs, _ = tf.nn.seq2seq.embedding_rnn_decoder(
+                    self.decoder_inputs[:bucket[1]], encoder_state, self.cell, self.target_vsz,
+                    self.hidden, output_projection=self.output_proj, feed_previous=do_decode)
 
-        # Perform full inference step, with buckets
-        return tf.nn.seq2seq.model_with_buckets(self.encoder_inputs, self.decoder_inputs,
-                                                self.targets, self.target_weights, self.buckets,
-                                                lambda x, y: seq2seq_f(x, y, do_decode),
-                                                softmax_loss_function=self.sampled_softmax_func), \
-            intermediate_embedding
+                outputs.append(bucket_outputs)
+                losses.append(tf.nn.seq2seq.sequence_loss(outputs[-1], self.targets[:bucket[1]],
+                                                          self.target_weights[:bucket[1]],
+                                                          softmax_loss_function=
+                                                          self.sampled_softmax_func))
+        # Return Outputs, Losses
+        return outputs, losses
 
     def train(self):
         """
@@ -138,7 +157,7 @@ class Seq2Seq:
         """
         params = tf.trainable_variables()
         self.gradient_norms, self.updates = [], []
-        opt = tf.train.GradientDescentOptimizer(self.learning_rate)
+        opt = tf.train.AdagradOptimizer(self.learning_rate)
 
         for b in xrange(len(self.buckets)):
             gradients = tf.gradients(self.losses[b], params)
@@ -240,22 +259,20 @@ class Seq2Seq:
 
         # Output feed: depends on whether we do a backward step or not.
         if not forward_only:
-            output_feed = [self.updates[bucket_id],         # Update Op that does SGD.
+            output_feed = [self.updates[bucket_id],  # Update Op that does SGD.
                            self.gradient_norms[bucket_id],  # Gradient norm.
-                           self.losses[bucket_id]]          # Loss for this batch.
-                           #self.deep_embedding]             # Embeddings for this batch.
+                           self.losses[bucket_id],  # Loss for this batch.
+                           self.intermediate_embeddings[bucket_id]]  # Embeddings for this batch.
         else:
-            output_feed = [self.losses[bucket_id]]          # Loss for this batch.
-                           # self.deep_embedding]             # Embeddings for this batch.
-            for l in xrange(decoder_size):                  # Output logits
+            output_feed = [self.losses[bucket_id],  # Loss for this batch.
+                           self.intermediate_embeddings[bucket_id]]  # Embeddings for this batch.
+            for l in xrange(decoder_size):  # Output logits
                 output_feed.append(self.outputs[bucket_id][l])
 
         # Run, and get outputs
         outputs = sess.run(output_feed, feed_dict=input_feed)
 
         if not forward_only:
-            # return outputs[2], outputs[3], None         # Loss, embedding, no outputs.
-            return outputs[2], None
+            return outputs[2], outputs[3], None  # Loss, embedding, no outputs.
         else:
-            # return outputs[0], outputs[1], outputs[2:]  # Loss, embedding, outputs.
-            return outputs[0], outputs[1:]
+            return outputs[0], outputs[1], outputs[2:]  # Loss, embedding, outputs.

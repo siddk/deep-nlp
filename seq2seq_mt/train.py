@@ -20,7 +20,7 @@ tf.app.flags.DEFINE_string("data_dir", "data/", "Data directory")
 tf.app.flags.DEFINE_string("log_dir", "log/", "Training directory.")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200, "How many training steps per checkpoint.")
 
-tf.app.flags.DEFINE_integer("max_vsz", 15000, "Maximum size of a single language vocabulary.")
+tf.app.flags.DEFINE_integer("max_vsz", 40000, "Maximum size of a single language vocabulary.")
 tf.app.flags.DEFINE_integer("max_size", 50, "Maximum size of sentence.")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
@@ -59,6 +59,16 @@ def bucket(source_path, target_path):
                 source, target = source_file.readline(), target_file.readline()
     return data_set
 
+
+def progress(count, total, suffix=''):
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', suffix))
+    sys.stdout.flush()
 
 def main(_):
     """
@@ -108,13 +118,13 @@ def main(_):
             # Get a batch and make a step.
             start_time = time.time()
             encoder_inputs, decoder_inputs, target_weights = model.get_batch(train_set, bucket_id)
-            # step_loss, embeddings, _ = model.step(sess, encoder_inputs, decoder_inputs,
-            #                                       target_weights, bucket_id, False)
-            step_loss, _ = model.step(sess, encoder_inputs, decoder_inputs, target_weights,
-                                      bucket_id, False)
+            step_loss, embeddings, _ = model.step(sess, encoder_inputs, decoder_inputs,
+                                                  target_weights, bucket_id, False)
             step_time += (time.time() - start_time) / FLAGS.steps_per_checkpoint
             loss += step_loss / FLAGS.steps_per_checkpoint
             current_step += 1
+            progress(current_step % FLAGS.steps_per_checkpoint, FLAGS.steps_per_checkpoint,
+                     "Step %s" % (current_step / FLAGS.steps_per_checkpoint))
 
             # Once in a while, we save checkpoint, and print statistics.
             if current_step % FLAGS.steps_per_checkpoint == 0:
