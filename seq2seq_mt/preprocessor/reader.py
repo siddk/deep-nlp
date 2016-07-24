@@ -27,8 +27,8 @@ def load_data():
     both the train and test sets.
     """
     # Setup Path Variables
-    fr_train_path = os.path.join(FLAGS.data_dir, "raw/french-senate-0.txt")
-    en_train_path = os.path.join(FLAGS.data_dir, "raw/english-senate-0.txt")
+    fr_train_path = os.path.join(FLAGS.data_dir, "raw/europarl-v7.fr-en.fr")
+    en_train_path = os.path.join(FLAGS.data_dir, "raw/europarl-v7.fr-en.en")
     fr_test_path = os.path.join(FLAGS.data_dir, "raw/french-senate-2.txt")
 
     # Build vocabularies

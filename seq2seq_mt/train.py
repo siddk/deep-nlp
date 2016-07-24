@@ -70,6 +70,7 @@ def progress(count, total, suffix=''):
     sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', suffix))
     sys.stdout.flush()
 
+
 def main(_):
     """
     Main function, loads and vectorizes data, builds model, then proceeds to start the training
@@ -82,6 +83,7 @@ def main(_):
     train_set = bucket(fr_train, en_train)
     train_bucket_sizes = [len(train_set[b]) for b in xrange(len(buckets))]
     train_total_size = float(sum(train_bucket_sizes))
+    print "Total Number of Training Examples", train_total_size
 
     # A bucket scale is a list of increasing numbers from 0 to 1 that we'll use
     # to select a bucket. Length of [scale[i], scale[i+1]] is proportional to
@@ -129,6 +131,7 @@ def main(_):
             # Once in a while, we save checkpoint, and print statistics.
             if current_step % FLAGS.steps_per_checkpoint == 0:
                 # Print statistics for the previous epoch.
+                print ""
                 perplexity = math.exp(loss) if loss < 300 else float('inf')
                 print ("Global step %d, Learning rate %.4f, Step-time %.2f, Perplexity %.2f" %
                       (model.global_step.eval(), model.learning_rate.eval(), step_time, perplexity))
