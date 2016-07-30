@@ -6,6 +6,7 @@ __pycache__/
 # Log files
 tmp/
 log/
+log_intermediate/
 
 # C extensions
 *.so

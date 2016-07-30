@@ -129,18 +129,18 @@ class Seq2Seq:
                                                                embedding_size=self.hidden)
                 _, encoder_state = tf.nn.rnn(encoder_cell, self.encoder_inputs[:bucket[0]],
                                              dtype=tf.float32)
-                self.intermediate_embeddings.append(encoder_state)
-                # # Transform the encoder state through a ReLU Hidden Layer
-                # intermediate_state = tf.matmul(encoder_state, self.inter_weight) + self.inter_bias
-                # intermediate_relu = tf.nn.relu(intermediate_state, "inter_relu")
-                #
-                # # Linear transform, get and append intermediate embedding
-                # embedding = tf.matmul(intermediate_relu, self.embed_weight) + self.embed_bias
-                # self.intermediate_embeddings.append(embedding)
+                # self.intermediate_embeddings.append(encoder_state)
+                # Transform the encoder state through a ReLU Hidden Layer
+                intermediate_state = tf.matmul(encoder_state, self.inter_weight) + self.inter_bias
+                intermediate_relu = tf.nn.relu(intermediate_state, "inter_relu")
+
+                # Linear transform, get and append intermediate embedding
+                embedding = tf.matmul(intermediate_relu, self.embed_weight) + self.embed_bias
+                self.intermediate_embeddings.append(embedding)
 
                 # Get decoder outputs
                 bucket_outputs, _ = tf.nn.seq2seq.embedding_rnn_decoder(
-                    self.decoder_inputs[:bucket[1]], encoder_state, self.cell, self.target_vsz,
+                    self.decoder_inputs[:bucket[1]], embedding, self.cell, self.target_vsz,
                     self.hidden, output_projection=self.output_proj, feed_previous=do_decode)
 
                 outputs.append(bucket_outputs)

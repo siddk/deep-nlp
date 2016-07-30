@@ -17,7 +17,7 @@ import time
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("data_dir", "data/", "Data directory")
-tf.app.flags.DEFINE_string("log_dir", "log/", "Training directory.")
+tf.app.flags.DEFINE_string("log_dir", "log_intermediate/", "Training directory.")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200, "How many training steps per checkpoint.")
 
 tf.app.flags.DEFINE_integer("max_vsz", 40000, "Maximum size of a single language vocabulary.")

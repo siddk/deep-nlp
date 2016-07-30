@@ -12,7 +12,7 @@ from preprocessor.reader import init_vocab, EOS_ID
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("data_dir", "data/", "Data directory")
-tf.app.flags.DEFINE_string("log_dir", "log/", "Training directory.")
+tf.app.flags.DEFINE_string("log_dir", "log_intermediate/", "Training directory.")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200, "How many training steps per checkpoint.")
 
 tf.app.flags.DEFINE_integer("max_vsz", 20000, "Maximum size of a single language vocabulary.")
@@ -25,8 +25,8 @@ tf.app.flags.DEFINE_integer("batch_size", 64, "Batch size to use during training
 tf.app.flags.DEFINE_integer("size", 512, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
 
-SOURCE_PATH = "data/tokens/fr.test"
-TARGET_PATH = "data/out.txt"
+SOURCE_PATH = "data/tokens/fr.train"
+TARGET_PATH = "data/out_intermediate.txt"
 buckets = [(10, 5), (15, 10), (25, 20), (35, 30), (50, 50)]
 
 
@@ -75,7 +75,7 @@ def main(_):
                     {bucket_id: [(token_ids, [])]}, bucket_id)
 
                 # Get output logits for the sentence.
-                _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
+                _, embedding, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
                                               target_weights, bucket_id, True)
 
                 # This is a greedy decoder - outputs are just argmaxes of output_logits.
