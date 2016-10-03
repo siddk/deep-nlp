@@ -114,9 +114,6 @@ class Seq2Seq:
         :param do_decode: Boolean if to feed previous output, or use true output in decode step.
         :return: Tuple of RNN Outputs, and RNN Losses
         """
-        # source_vsz, target_vsz, hidden = self.source_vsz, self.target_vsz, self.hidden
-        # output_proj, cell = self.output_proj, self.cell
-
         # Setup placeholder for stealing the intermediate state, for use later.
         self.intermediate_embeddings = []
         outputs, losses = [], []
@@ -129,7 +126,7 @@ class Seq2Seq:
                                                                embedding_size=self.hidden)
                 _, encoder_state = tf.nn.rnn(encoder_cell, self.encoder_inputs[:bucket[0]],
                                              dtype=tf.float32)
-                # self.intermediate_embeddings.append(encoder_state)
+
                 # Transform the encoder state through a ReLU Hidden Layer
                 intermediate_state = tf.matmul(encoder_state, self.inter_weight) + self.inter_bias
                 intermediate_relu = tf.nn.relu(intermediate_state, "inter_relu")
