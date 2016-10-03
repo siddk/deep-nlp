@@ -11,12 +11,29 @@ The following models are implemented:
                  MNIST Handwriting Classification task. Very simple model, contained in a single 
                  python script, just to show off the Tensorflow basics.
                  
++ **mnist_cnn/**: A three-layer Convolutional Neural Network for the MNIST Handwritten Digit Classification task.
+                 
 + **langmod_nn/**: A three-layer Feed-Forward Bigram Language model that tries to predict the next 
                    word in the corpus given the current word. 
+
++ **langmod_rnn/**: A Recurrent Neural Network Language Model. Given a fixed-sized context window, predict the time-shifted 
+                    (next) words in the sequence.
+                    
++ **memory_networks/**: Implementation of End-to-End Memory Networks: https://papers.nips.cc/paper/5846-end-to-end-memory-networks.pdf                    
+
++ **seq2seq_mt/**: Implementation of Encoder-Decoder Machine Translation for French-English Translation.
+
++ **multilingual_embeddings/**: Multi-Task Translation implementation, for the purpose of learning language-agnostic sentence                                 embeddings (encoding multiple source languages in the same low-dimensional space).
                    
 + **cifar_cnn/**: A multi-layer Convolutional Neural Network that follows the AlexNet convention for
                   the CIFAR-10 image classification task. Given an image, classify it as an 
                   airplane, automobile, bird, cat, deer, dog, frog, horse, ship, or truck.
+
++ **deep_q/**: Implementation of Deep Q-Learning for Atari Pong.
+
++ **variational_autoencoder/**: Variational Autoencoder implementation, compresses and decodes MNIST digits, with      
+                                demonstration of walking latent space.
+          
                   
 ## Project Setup ##
 There are a lot of ways to set up and train Tensorflow models, which can be very confusing. With
